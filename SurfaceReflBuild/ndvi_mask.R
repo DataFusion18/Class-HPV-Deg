@@ -1,4 +1,4 @@
-#Jonathan V. Solórzano
+#Jonathan V. SolÃ³rzano
 #2016
 
 #ndvi_mask
@@ -6,6 +6,17 @@
 
 #Needs raster library
 #library(raster)
+
+#carpeta_entrada<-"C:/example/example"; Location where ndvi images are located
+#carpeta_salida<-"C:/example/example"; Location where masked ndvi images will be exported
+#shape<-"example.shp"; Shape file of the ineterest area
+#anios_num<-seq(1992,2010,1); Sequence of numbers of years to be analyzed
+#thresh_cfmask; Threshold of cf mask, value taken as clouds
+#thresh_cloud_l; lower threshold of the values from cloudmask taken as clouds
+#thresh_cloud_u; upper threshold of the values from cloudmask taken as clouds
+#thresh_cfmaskconf; lower threshold of the values from cfmask_conf to be taken as clouds
+#trim_l; lower threshold of values of ndvi to be ignored
+#trim_u; upper threshold of values of ndvi to be ignored 
 
 ndvi_mask<-function(carpeta_entrada,carpeta_salida,shape,anios_num,thresh_cfmask=0,thresh_cloud_l=40,thresh_cloud_u=60,thresh_cfmaskconf=2,trim_u=10000,trim_l=-10000)
   {
