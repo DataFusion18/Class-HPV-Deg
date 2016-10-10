@@ -1,15 +1,14 @@
-#Jonathan V. Sol√≥rzano
+#Jonathan V. Solorzano
 #2016
+
+#English
 
 #ndvi_mask
 #Masks clouds and other non-vegetated surfaces as water from surface reflectance images, processed and downloaded via ESPA (usgs) 
-
-#Needs raster library
-#library(raster)
+#Values to be ingored based on cfmask, cfmaskconf or cloud layers (downloadad from ESPA site) are passed as arguments to the function.
 
 #carpeta_entrada<-"C:/example/example"; Location where ndvi images are located
 #carpeta_salida<-"C:/example/example"; Location where masked ndvi images will be exported
-#shape<-"example.shp"; Shape file of the ineterest area
 #anios_num<-seq(1992,2010,1); Sequence of numbers of years to be analyzed
 #thresh_cfmask; Threshold of cf mask, value taken as clouds
 #thresh_cloud_l; lower threshold of the values from cloudmask taken as clouds
@@ -17,8 +16,24 @@
 #thresh_cfmaskconf; lower threshold of the values from cfmask_conf to be taken as clouds
 #trim_l; lower threshold of values of ndvi to be ignored
 #trim_u; upper threshold of values of ndvi to be ignored 
+#shape<-"example.shp"; optional argument, Shape file of the ineterest area
 
-ndvi_mask<-function(carpeta_entrada,carpeta_salida,shape,anios_num,thresh_cfmask=0,thresh_cloud_l=40,thresh_cloud_u=60,thresh_cfmaskconf=2,trim_u=10000,trim_l=-10000)
+#EspaÒol
+#Enmascara nubes y otras superficies como agua de imagenes de reflectancia de la superficie terrestre, procesadas y descargadas del sitio ESPA (usgs)
+#Los valores a ignorar de las imagenes ndvi de las capas cfmask, cfmaskconf o cloud se pasan a la funciÛn como argumentos. (Estas capas se descargan del sitio ESPA)
+
+#carpeta_entrada<-"C:/example/example"; UbicaciÛn en disco de las im·genes a enmascarar
+#carpeta_salida<-"C:/example/example"; UbicaciÛn en disco donde se guardan las im·genes enmascaradas
+#anios_num<-seq(1992,2010,1); Vector con el n˙mero de los aÒos a trabajar
+#thresh_cfmask; Valor que corresponde a ·reas a ignorar con cfmask
+#thresh_cloud_l; Valor inferior de los valores de cloudmask a ignorar
+#thresh_cloud_u; Valor superior de los valores de cloudmask a ignorar
+#thresh_cfmaskconf; Valor inferior de los valores de cloudmask a ignorar
+#trim_l; Valor inferior de los valores de ndvi a ignorar
+#trim_u; Valor superior de los valores de ndvi a ignorar
+#shape<-"example.shp"; argument opcional, Shape del ·rea de interÈs
+
+ndvi_mask<-function(carpeta_entrada,carpeta_salida,anios_num,thresh_cfmask=0,thresh_cloud_l=40,thresh_cloud_u=60,thresh_cfmaskconf=2,trim_u=10000,trim_l=-10000,shape)
   {
     #create folders for each year analyzed
     mapply(dir.create,file.path(carpeta_salida,anios_num))
@@ -40,14 +55,11 @@ ndvi_mask<-function(carpeta_entrada,carpeta_salida,shape,anios_num,thresh_cfmask
         #Check if the following year is inside the actual years vector, if not just ignore and pass to next year
         if(l %in% anios_num==T)
           {
-          
-            
             files_year<-which(years==l)
             
             #If there is at least on valid image file
             if(length(files_year)>=1)
               {
-              
                 #Id image names
                 corte_filenames<-corte_filenamesMaster[files_year]
                 id_img<-id_imgMaster[files_year]
@@ -55,29 +67,47 @@ ndvi_mask<-function(carpeta_entrada,carpeta_salida,shape,anios_num,thresh_cfmask
                 #Cycle for masking every image
                 for(i in 1:length(corte_filenames))
                   {
-                  
                     #Obtain satellite id
                     sat<-substr(id_img[i],3,3)
                     
                     #Load ndvi raster
                     ndvi<-raster(paste0(corte_filenames[i],"_sr_ndvi.tif"))
-                    ndvi<-crop(ndvi,shape)
                     
                     #Load masks
                     #cfmask
                     cfmask<-raster(paste0(corte_filenames[i],"_cfmask.tif"))	
-                    cfmask<-crop(cfmask,extent(shape))
+                    
+                    #If shape is supplied
+                    if(missing(shape))
+                      {
+                        print("no shape supplied")
+                      }else{
+                        ndvi<-crop(ndvi,shape)
+                        cfmask<-crop(cfmask,extent(shape))
+                      }
+                    
+                    #Mask based on threshold value
                     cfmask[cfmask>thresh_cfmask]<-NA
                     
                     #cloudmask
                     if(sat=="8")
                       {
                         cloudmask<-raster(paste0(corte_filenames[i],"_sr_cloud.tif"))
-                        cloudmask <-crop(cloudmask,shape)
+                        if(missing(shape))
+                          {
+                            #print("no shape supplied")
+                          }else{
+                            cloudmask <-crop(cloudmask,shape)
+                          }
                         cloudmask[cloudmask>=thresh_cloud_l&cloudmask<=thresh_cloud_u]<-NA	
                       }else{
                         cloudmask<-raster(paste0(corte_filenames[i],"_cfmask_conf.tif"))
-                        cloudmask <-crop(cloudmask,shape)
+                        if(missing(shape))
+                          {
+                            #print("no shape supplied")
+                          }else{
+                            cloudmask <-crop(cloudmask,shape)
+                          }
                         cloudmask[cloudmask>=thresh_cfmaskconf]<-NA	
                       }
                     
